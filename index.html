@@ -585,40 +585,59 @@
           if (d > daysInMonth) break;
         }
 
-        // TODOS hardcoded or from JSON
+        // ————— Editable TODOS —————
+        // Load from localStorage first, fallback to JSON
         var TODOS = [];
         try {
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", "todos.json", false);
-          xhr.overrideMimeType("application/json");
-          xhr.send(null);
-          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
+          var stored = localStorage.getItem('TODOS');
+          if (stored) {
+            TODOS = JSON.parse(stored);
+          } else {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "todos.json", false);
+            xhr.overrideMimeType("application/json");
+            xhr.send(null);
+            if (xhr.status === 200) {
+              TODOS = JSON.parse(xhr.responseText);
+            }
+          }
         } catch (e) {}
         while (TODOS.length < 10) TODOS.push("");
 
-        // Render todos
+        // Render & enable editing
         var list = document.getElementById("todo-list");
         for (var i = 0; i < 10; i++) {
-          var item = document.createElement("div");
-          item.className = "todo-item";
-          var idx = document.createElement("span");
-          idx.className = "idx";
-          idx.innerText = i + 1 + ")";
-          var lbl = document.createElement("div");
-          lbl.className = "label";
-          var txt = TODOS[i] || "";
-          var ci = txt.indexOf(":");
-          if (ci !== -1) {
-            var pr = txt.substring(0, ci + 1),
-              rt = txt.substring(ci + 1).trim();
-            var strong = document.createElement("strong");
-            strong.innerText = pr;
-            lbl.appendChild(strong);
-            if (rt) lbl.appendChild(document.createTextNode(" " + rt));
-          } else lbl.innerText = txt;
-          item.appendChild(idx);
-          item.appendChild(lbl);
-          list.appendChild(item);
+          (function(i) {
+            var item = document.createElement("div");
+            item.className = "todo-item";
+            var idx = document.createElement("span");
+            idx.className = "idx";
+            idx.innerText = (i + 1) + ")";
+            var lbl = document.createElement("div");
+            lbl.className = "label";
+            lbl.contentEditable = true;
+
+            // Bold prefix
+            var txt = TODOS[i] || "";
+            var ci = txt.indexOf(":");
+            if (ci !== -1) {
+              var pr = txt.substring(0, ci + 1);
+              var rt = txt.substring(ci + 1).trim();
+              lbl.innerHTML = "<strong>" + pr + "</strong>" + (rt ? " " + rt : "");
+            } else {
+              lbl.innerText = txt;
+            }
+
+            // Persist on blur
+            lbl.addEventListener("blur", function() {
+              TODOS[i] = lbl.innerText.trim();
+              localStorage.setItem("TODOS", JSON.stringify(TODOS));
+            });
+
+            item.appendChild(idx);
+            item.appendChild(lbl);
+            list.appendChild(item);
+          })(i);
         }
       })();
     </script>
