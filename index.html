@@ -589,7 +589,7 @@
         // Load from localStorage first, fallback to JSON
         var TODOS = [];
         try {
-          var stored = localStorage.getItem('TODOS');
+          var stored = localStorage.getItem("TODOS");
           if (stored) {
             TODOS = JSON.parse(stored);
           } else {
@@ -607,12 +607,12 @@
         // Render & enable editing
         var list = document.getElementById("todo-list");
         for (var i = 0; i < 10; i++) {
-          (function(i) {
+          (function (i) {
             var item = document.createElement("div");
             item.className = "todo-item";
             var idx = document.createElement("span");
             idx.className = "idx";
-            idx.innerText = (i + 1) + ")";
+            idx.innerText = i + 1 + ")";
             var lbl = document.createElement("div");
             lbl.className = "label";
             lbl.contentEditable = true;
@@ -623,13 +623,14 @@
             if (ci !== -1) {
               var pr = txt.substring(0, ci + 1);
               var rt = txt.substring(ci + 1).trim();
-              lbl.innerHTML = "<strong>" + pr + "</strong>" + (rt ? " " + rt : "");
+              lbl.innerHTML =
+                "<strong>" + pr + "</strong>" + (rt ? " " + rt : "");
             } else {
               lbl.innerText = txt;
             }
 
             // Persist on blur
-            lbl.addEventListener("blur", function() {
+            lbl.addEventListener("blur", function () {
               TODOS[i] = lbl.innerText.trim();
               localStorage.setItem("TODOS", JSON.stringify(TODOS));
             });
