@@ -16,7 +16,6 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen fixed container */
       html,
       body,
       #container {
@@ -28,14 +27,6 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        overscroll-behavior: none;
-      }
-      *::-webkit-scrollbar {
-        display: none !important;
-      }
-      html {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
       }
       body {
         font-family: Arial, sans-serif;
@@ -43,35 +34,56 @@
         color: #000;
       }
       #container {
-        display: -webkit-flex;
         display: flex;
-        -webkit-flex-direction: column;
         flex-direction: column;
       }
 
-      /* Calendar pane (40%), hide weekday */
+      /* Calendar pane (40%) with date + quote */
       .calendar-pane {
-        -webkit-flex: 0 0 40%;
         flex: 0 0 40%;
         padding: 10px;
         border-bottom: 1px solid #ccc;
         overflow: hidden;
       }
+      .header-flex {
+        display: -webkit-flex;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .date-block {
+        text-align: left;
+        margin-left: 4%;
+      }
       #big-date {
-        text-align: center;
         font-size: 3.5em;
-        margin-bottom: 4px;
+        line-height: 1;
       }
       #subdate {
-        text-align: center;
         font-size: 1.2em;
-        margin-bottom: 12px;
       }
+      .quote-block {
+        max-width: 40%;
+        text-align: right;
+      }
+      .quote-block em {
+        font-style: italic;
+        font-weight: bold;
+        display: block;
+      }
+      .quote-block strong {
+        display: block;
+        margin-top: 4px;
+        font-style: normal;
+        font-weight: normal;
+      }
+
       .calendar-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 1em;
         table-layout: fixed;
+        margin-top: 8px;
       }
       .calendar-table th,
       .calendar-table td {
@@ -89,10 +101,9 @@
 
       /* Tasks pane (60%) */
       .todo-pane {
-        -webkit-flex: 1 1 60%;
         flex: 1 1 60%;
         padding: 10px 5px;
-        overflow: hidden !important;
+        overflow: hidden;
       }
       .todo-title {
         text-align: center;
@@ -100,7 +111,6 @@
         margin-bottom: 20px;
       }
       .todo-item {
-        display: -webkit-table;
         display: table;
         width: 100%;
         margin-bottom: 32px;
@@ -125,8 +135,13 @@
   <body>
     <div id="container">
       <div class="calendar-pane">
-        <div id="big-date"></div>
-        <div id="subdate"></div>
+        <div class="header-flex">
+          <div class="date-block">
+            <div id="big-date"></div>
+            <div id="subdate"></div>
+          </div>
+          <div class="quote-block" id="quote"></div>
+        </div>
         <table class="calendar-table">
           <thead>
             <tr>
@@ -149,33 +164,47 @@
     </div>
     <script>
       (function () {
-        // Lock scrolling
-        var elems = [
+        // Disable scrolling
+        var els = [
           document.documentElement,
           document.body,
           document.getElementById("container"),
         ];
-        for (var i = 0; i < elems.length; i++)
-          if (elems[i]) elems[i].style.overflow = "hidden";
+        for (var i = 0; i < els.length; i++)
+          if (els[i]) els[i].style.overflow = "hidden";
 
-        // Load tasks
-        var TODOS = [];
-        try {
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", "todos.json", false);
-          xhr.overrideMimeType("application/json");
-          xhr.send(null);
-          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
-        } catch (e) {}
-        while (TODOS.length < 10) TODOS.push("");
+        // Random quotes
+        var QUOTES = [
+          {
+            text: "The only way to do great work is to love what you do.",
+            author: "Steve Jobs",
+          },
+          {
+            text: "Life is what happens when you're busy making other plans.",
+            author: "John Lennon",
+          },
+          {
+            text: "Be yourself; everyone else is already taken.",
+            author: "Oscar Wilde",
+          },
+          {
+            text: "In the middle of difficulty lies opportunity.",
+            author: "Albert Einstein",
+          },
+          {
+            text: "The future belongs to those who believe in the beauty of their dreams.",
+            author: "Eleanor Roosevelt",
+          },
+        ];
+        var quoteEl = document.getElementById("quote");
+        var q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+        quoteEl.innerHTML =
+          '<em>"' + q.text + '"</em>' + "<strong>– " + q.author + "</strong>";
 
-        // Get IST date
+        // IST date
         var now = new Date();
         var utc = now.getTime() + now.getTimezoneOffset() * 60000;
         var ist = new Date(utc + 5.5 * 60 * 60000);
-
-        // Populate date
-        document.getElementById("big-date").innerText = ist.getDate();
         var months = [
           "January",
           "February",
@@ -190,18 +219,19 @@
           "November",
           "December",
         ];
+        document.getElementById("big-date").innerText = ist.getDate();
         document.getElementById("subdate").innerText =
           months[ist.getMonth()] + " " + ist.getFullYear();
 
-        // Build calendar grid
+        // Calendar grid
         var firstDay = new Date(ist.getFullYear(), ist.getMonth(), 1).getDay();
         var daysInMonth = new Date(
           ist.getFullYear(),
           ist.getMonth() + 1,
           0
         ).getDate();
-        var d = 1;
-        var calBody = document.getElementById("calendar-body");
+        var d = 1,
+          calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
@@ -219,8 +249,19 @@
           if (d > daysInMonth) break;
         }
 
-        // Populate todos with bold prefix
-        var todoList = document.getElementById("todo-list");
+        // TODOS hardcoded or from JSON
+        var TODOS = [];
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "todos.json", false);
+          xhr.overrideMimeType("application/json");
+          xhr.send(null);
+          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
+        } catch (e) {}
+        while (TODOS.length < 10) TODOS.push("");
+
+        // Render todos
+        var list = document.getElementById("todo-list");
         for (var i = 0; i < 10; i++) {
           var item = document.createElement("div");
           item.className = "todo-item";
@@ -232,16 +273,16 @@
           var txt = TODOS[i] || "";
           var ci = txt.indexOf(":");
           if (ci !== -1) {
-            var pre = txt.substring(0, ci + 1),
-              rest = txt.substring(ci + 1).trim();
+            var pr = txt.substring(0, ci + 1),
+              rt = txt.substring(ci + 1).trim();
             var strong = document.createElement("strong");
-            strong.innerText = pre;
+            strong.innerText = pr;
             lbl.appendChild(strong);
-            if (rest) lbl.appendChild(document.createTextNode(" " + rest));
+            if (rt) lbl.appendChild(document.createTextNode(" " + rt));
           } else lbl.innerText = txt;
           item.appendChild(idx);
           item.appendChild(lbl);
-          todoList.appendChild(item);
+          list.appendChild(item);
         }
       })();
     </script>
