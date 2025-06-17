@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="3600" />
+    <!-- Auto-refresh every hour -->
+    <title>Things To Do Today</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: white;
+        color: black;
+        padding: 20px;
+        max-width: 700px;
+        margin: auto;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        padding-bottom: 10px;
+        border-bottom: 2px solid black;
+      }
+      .date-line {
+        margin: 20px 0 10px;
+        font-size: 1.2rem;
+      }
+      .todo-item {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid black;
+        padding: 8px 0;
+      }
+      .checkbox {
+        width: 20px;
+        height: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <span>THINGS TO DO</span>
+      <span><span id="today-day"></span></span>
+    </div>
+    <div class="date-line">
+      Date: <span id="today-date"></span> <span id="today-day"></span>
+    </div>
+
+    <div id="todo-list">
+      <div class="todo-item">
+        <span>1)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>2)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>3)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>4)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>5)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>6)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>7)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>8)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>9)</span><input class="checkbox" type="checkbox" />
+      </div>
+      <div class="todo-item">
+        <span>10)</span><input class="checkbox" type="checkbox" />
+      </div>
+    </div>
+
+    <script>
+      const today = new Date();
+      const weekdays = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      document.getElementById("today-date").textContent =
+        today.toLocaleDateString();
+      document.getElementById("today-day").textContent =
+        weekdays[today.getDay()].toUpperCase();
+    </script>
+  </body>
+</html>
