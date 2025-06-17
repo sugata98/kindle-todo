@@ -16,7 +16,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Reset and full-screen viewport for 1080×1440 */
+      /* Reset and full-screen viewport */
       * {
         margin: 0;
         padding: 0;
@@ -26,7 +26,6 @@
       body {
         width: 1080px;
         height: 1440px;
-        margin: 0 auto;
         overflow: hidden;
       }
       body {
@@ -35,19 +34,21 @@
         color: #000;
       }
       #container {
-        width: 1080px;
-        height: 1440px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         flex-direction: column;
       }
 
-      /* Calendar pane: ~40% of height (560px) */
+      /* Calendar pane (~40% height) */
       .calendar-pane {
         height: 560px;
         padding: 12px;
         border-bottom: 1px solid #ccc;
         overflow: hidden;
-        flex: none;
       }
       #weekday {
         text-align: center;
@@ -84,12 +85,11 @@
         border-radius: 4px;
       }
 
-      /* Tasks pane: remaining ~60% (880px) */
+      /* Tasks pane (~60% height) */
       .todo-pane {
         height: 880px;
         padding: 12px;
         overflow: hidden;
-        flex: none;
       }
       .todo-title {
         text-align: center;
@@ -140,6 +140,19 @@
     </div>
     <script>
       (function () {
+        // Prevent any scrolling
+        window.scrollTo(0, 0);
+        window.onscroll = function () {
+          window.scrollTo(0, 0);
+        };
+        document.addEventListener(
+          "touchmove",
+          function (e) {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+
         var weekdays = [
           "Sunday",
           "Monday",
@@ -165,12 +178,14 @@
         ];
         var today = new Date();
 
+        // Header
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
 
+        // Build calendar
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -200,6 +215,7 @@
           if (date > daysInMonth) break;
         }
 
+        // Build tasks
         var todoList = document.getElementById("todo-list");
         for (var i = 1; i <= 10; i++) {
           var item = document.createElement("div");
