@@ -5,7 +5,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <meta http-equiv="refresh" content="3600" />
     <meta
@@ -16,6 +16,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
+      /* Fullscreen fixed, hide scrollbars */
       html,
       body,
       #container {
@@ -27,6 +28,7 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
+        overscroll-behavior: none;
       }
       *::-webkit-scrollbar {
         display: none !important;
@@ -40,12 +42,12 @@
         background: #fff;
         color: #000;
       }
-
       #container {
         display: flex;
         flex-direction: column;
       }
 
+      /* Calendar pane (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -88,23 +90,27 @@
         border-radius: 4px;
       }
 
+      /* Tasks pane (60%) */
       .todo-pane {
         flex: 1 1 60%;
         position: relative;
-        padding: 10px;
         overflow: hidden;
       }
       .todo-title {
         text-align: center;
         font-size: 2em;
         margin: 0;
-        padding-bottom: 4px;
+        padding: 4px 0;
       }
-      /* Canvas size/position set in JS */
       #todo-canvas {
         position: absolute;
+        top: 2.4em;
         left: 0;
-        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: calc(100% - 2.4em);
+        display: block;
       }
     </style>
   </head>
@@ -136,16 +142,12 @@
     </div>
     <script>
       (function () {
-        // Prevent scroll
-        [
-          document.documentElement,
-          document.body,
-          document.getElementById("container"),
-        ].forEach((el) => {
-          if (el) el.style.overflow = "hidden";
-        });
+        // disable all scrolling
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        document.getElementById("container").style.overflow = "hidden";
 
-        // Load todos.json synchronously over HTTP
+        // Load tasks from todos.json (HTTP same origin)
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
@@ -154,7 +156,7 @@
           xhr.send(null);
           if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
         } catch (e) {
-          console.log("todos.json load error", e);
+          console.log("todos.json load failed", e);
         }
         while (TODOS.length < 10) TODOS.push("");
 
@@ -198,8 +200,8 @@
           today.getMonth() + 1,
           0
         ).getDate();
-        var d = 1,
-          calBody = document.getElementById("calendar-body");
+        var d = 1;
+        var calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
@@ -217,37 +219,34 @@
           if (d > daysInMonth) break;
         }
 
-        // Canvas tasks
-        var pane = document.querySelector(".todo-pane");
-        var title = document.querySelector(".todo-title");
+        // Setup canvas for tasks
         var canvas = document.getElementById("todo-canvas");
         var ctx = canvas.getContext("2d");
-        function resize() {
-          var paneW = pane.clientWidth;
-          var paneH = pane.clientHeight - title.clientHeight - 4; // title padding
-          canvas.width = paneW;
-          canvas.height = paneH;
-          canvas.style.top = title.clientHeight + 4 + "px";
-          // draw
-          ctx.clearRect(0, 0, paneW, paneH);
-          var lineH = paneH / 10;
+        function drawTasks() {
+          var w = (canvas.width = canvas.clientWidth);
+          var h = (canvas.height = canvas.clientHeight);
+          ctx.clearRect(0, 0, w, h);
+          var lineH = h / 10;
           ctx.font = "1.7em Arial";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "#000";
           ctx.strokeStyle = "#000";
           for (var i = 0; i < 10; i++) {
             var y = lineH * i + lineH / 2;
+            // index
             ctx.fillText(i + 1 + ")", 10, y);
+            // line
             var startX = 60;
             ctx.beginPath();
-            ctx.moveTo(startX, y + 10);
-            ctx.lineTo(paneW - 10, y + 10);
+            ctx.moveTo(startX, y + lineH * 0.1);
+            ctx.lineTo(w - 10, y + lineH * 0.1);
             ctx.stroke();
+            // text
             if (TODOS[i]) ctx.fillText(TODOS[i], startX, y);
           }
         }
-        window.addEventListener("resize", resize);
-        resize();
+        window.addEventListener("resize", drawTasks);
+        drawTasks();
       })();
     </script>
   </body>
