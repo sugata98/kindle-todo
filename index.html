@@ -16,7 +16,6 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen fixed, hide scrollbars */
       html,
       body,
       #container {
@@ -47,7 +46,6 @@
         flex-direction: column;
       }
 
-      /* Calendar pane (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -90,7 +88,6 @@
         border-radius: 4px;
       }
 
-      /* Tasks pane (60%) */
       .todo-pane {
         flex: 1 1 60%;
         position: relative;
@@ -104,13 +101,7 @@
       }
       #todo-canvas {
         position: absolute;
-        top: 2.4em;
         left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: calc(100% - 2.4em);
-        display: block;
       }
     </style>
   </head>
@@ -142,25 +133,32 @@
     </div>
     <script>
       (function () {
-        // disable all scrolling
-        document.documentElement.style.overflow = "hidden";
-        document.body.style.overflow = "hidden";
-        document.getElementById("container").style.overflow = "hidden";
+        // Lock out scrolling
+        [
+          document.documentElement,
+          document.body,
+          document.getElementById("container"),
+        ].forEach(function (el) {
+          if (el) el.style.overflow = "hidden";
+        });
 
-        // Load tasks from todos.json (HTTP same origin)
+        // Load external todos.json
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", "todos.json", false);
           xhr.overrideMimeType("application/json");
           xhr.send(null);
-          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
+          if (xhr.status === 200) {
+            TODOS = JSON.parse(xhr.responseText);
+          }
         } catch (e) {
           console.log("todos.json load failed", e);
         }
+        // pad to 10
         while (TODOS.length < 10) TODOS.push("");
 
-        // Render calendar (DOM)
+        // Render calendar
         var weekdays = [
           "Sunday",
           "Monday",
@@ -190,6 +188,7 @@
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
+
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -200,8 +199,9 @@
           today.getMonth() + 1,
           0
         ).getDate();
-        var d = 1;
-        var calBody = document.getElementById("calendar-body");
+        var d = 1,
+          calBody = document.getElementById("calendar-body");
+
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
@@ -219,34 +219,53 @@
           if (d > daysInMonth) break;
         }
 
-        // Setup canvas for tasks
+        // Canvas for tasks
+        var pane = document.querySelector(".todo-pane");
+        var titleEl = document.querySelector(".todo-title");
         var canvas = document.getElementById("todo-canvas");
         var ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+          var paneW = pane.clientWidth;
+          var paneH = pane.clientHeight;
+          var titleH = titleEl.clientHeight;
+          // position and size
+          canvas.style.top = titleH + "px";
+          canvas.style.width = paneW + "px";
+          canvas.style.height = paneH - titleH + "px";
+          // canvas drawing buffer
+          canvas.width = paneW;
+          canvas.height = paneH - titleH;
+          drawTasks();
+        }
+
         function drawTasks() {
-          var w = (canvas.width = canvas.clientWidth);
-          var h = (canvas.height = canvas.clientHeight);
+          var w = canvas.width;
+          var h = canvas.height;
           ctx.clearRect(0, 0, w, h);
-          var lineH = h / 10;
-          ctx.font = "1.7em Arial";
+          var lineH = Math.floor(h / 10);
+          ctx.font = Math.floor(lineH * 0.6) + "px Arial";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "#000";
           ctx.strokeStyle = "#000";
+
           for (var i = 0; i < 10; i++) {
             var y = lineH * i + lineH / 2;
-            // index
+            // draw index
             ctx.fillText(i + 1 + ")", 10, y);
-            // line
-            var startX = 60;
+            // draw underline
+            var startX = Math.floor(lineH * 2.5);
             ctx.beginPath();
-            ctx.moveTo(startX, y + lineH * 0.1);
-            ctx.lineTo(w - 10, y + lineH * 0.1);
+            ctx.moveTo(startX, y + Math.floor(lineH * 0.1));
+            ctx.lineTo(w - 10, y + Math.floor(lineH * 0.1));
             ctx.stroke();
-            // text
+            // draw task
             if (TODOS[i]) ctx.fillText(TODOS[i], startX, y);
           }
         }
-        window.addEventListener("resize", drawTasks);
-        drawTasks();
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
       })();
     </script>
   </body>
