@@ -5,80 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="refresh" content="3600" />
     <!-- Auto-refresh every hour -->
-    <title>Things To Do Today</title>
+    <title>Things To Do</title>
     <style>
       body {
         font-family: Arial, sans-serif;
         background: white;
         color: black;
-        padding: 20px;
-        max-width: 700px;
-        margin: auto;
+        margin: 0;
+        padding: 10px;
+        width: 100vw;
+        height: 100vh;
+        box-sizing: border-box;
       }
       .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 1.5rem;
+        display: block;
+        text-align: center;
+        font-size: 1.5em;
         font-weight: bold;
-        padding-bottom: 10px;
         border-bottom: 2px solid black;
+        padding-bottom: 10px;
       }
       .date-line {
-        margin: 20px 0 10px;
-        font-size: 1.2rem;
+        font-size: 1em;
+        margin: 10px 0;
+        text-align: center;
       }
       .todo-item {
         display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid black;
-        padding: 8px 0;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 1em;
+      }
+      .todo-item span {
+        width: 2em;
       }
       .checkbox {
-        width: 20px;
-        height: 20px;
+        margin-left: auto;
+        width: 16px;
+        height: 16px;
       }
     </style>
   </head>
   <body>
-    <div class="header">
-      <span>THINGS TO DO</span>
-      <span><span id="today-day"></span></span>
-    </div>
+    <div class="header">THINGS TO DO <span id="today-day"></span></div>
     <div class="date-line">
-      Date: <span id="today-date"></span> <span id="today-day"></span>
+      Date: <span id="today-date"></span> <span id="today-day-inline"></span>
     </div>
 
     <div id="todo-list">
       <div class="todo-item">
-        <span>1)</span><input class="checkbox" type="checkbox" />
+        <span>1)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>2)</span><input class="checkbox" type="checkbox" />
+        <span>2)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>3)</span><input class="checkbox" type="checkbox" />
+        <span>3)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>4)</span><input class="checkbox" type="checkbox" />
+        <span>4)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>5)</span><input class="checkbox" type="checkbox" />
+        <span>5)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>6)</span><input class="checkbox" type="checkbox" />
+        <span>6)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>7)</span><input class="checkbox" type="checkbox" />
+        <span>7)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>8)</span><input class="checkbox" type="checkbox" />
+        <span>8)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>9)</span><input class="checkbox" type="checkbox" />
+        <span>9)</span><input class="checkbox" type="checkbox" disabled />
       </div>
       <div class="todo-item">
-        <span>10)</span><input class="checkbox" type="checkbox" />
+        <span>10)</span><input class="checkbox" type="checkbox" disabled />
       </div>
     </div>
 
@@ -95,8 +98,9 @@
       ];
       document.getElementById("today-date").textContent =
         today.toLocaleDateString();
-      document.getElementById("today-day").textContent =
-        weekdays[today.getDay()].toUpperCase();
+      const day = weekdays[today.getDay()].toUpperCase();
+      document.getElementById("today-day").textContent = day;
+      document.getElementById("today-day-inline").textContent = day;
     </script>
   </body>
 </html>
