@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="viewport"
@@ -16,6 +16,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
+      /* Fullscreen fixed container, hide overflow */
       html,
       body,
       #container {
@@ -46,6 +47,7 @@
         flex-direction: column;
       }
 
+      /* Calendar (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -88,6 +90,7 @@
         border-radius: 4px;
       }
 
+      /* Tasks pane (60%) using canvas */
       .todo-pane {
         flex: 1 1 60%;
         position: relative;
@@ -96,12 +99,17 @@
       .todo-title {
         text-align: center;
         font-size: 2em;
+        line-height: 2.5em;
+        height: 2.5em;
         margin: 0;
-        padding: 4px 0;
       }
       #todo-canvas {
         position: absolute;
+        top: 2.5em;
         left: 0;
+        right: 0;
+        bottom: 0;
+        display: block;
       }
     </style>
   </head>
@@ -133,32 +141,30 @@
     </div>
     <script>
       (function () {
-        // Lock out scrolling
+        // Disable scrolling
         [
           document.documentElement,
           document.body,
           document.getElementById("container"),
-        ].forEach(function (el) {
+        ].forEach((el) => {
           if (el) el.style.overflow = "hidden";
         });
 
-        // Load external todos.json
+        // Load external todos.json (HTTP same-origin)
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", "todos.json", false);
           xhr.overrideMimeType("application/json");
           xhr.send(null);
-          if (xhr.status === 200) {
-            TODOS = JSON.parse(xhr.responseText);
-          }
+          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
         } catch (e) {
           console.log("todos.json load failed", e);
         }
-        // pad to 10
+        // pad to exactly 10 entries
         while (TODOS.length < 10) TODOS.push("");
 
-        // Render calendar
+        // Render calendar (DOM)
         var weekdays = [
           "Sunday",
           "Monday",
@@ -199,9 +205,8 @@
           today.getMonth() + 1,
           0
         ).getDate();
-        var d = 1,
-          calBody = document.getElementById("calendar-body");
-
+        var d = 1;
+        var calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
@@ -220,35 +225,18 @@
         }
 
         // Canvas for tasks
-        var pane = document.querySelector(".todo-pane");
-        var titleEl = document.querySelector(".todo-title");
         var canvas = document.getElementById("todo-canvas");
         var ctx = canvas.getContext("2d");
-
-        function resizeCanvas() {
-          var paneW = pane.clientWidth;
-          var paneH = pane.clientHeight;
-          var titleH = titleEl.clientHeight;
-          // position and size
-          canvas.style.top = titleH + "px";
-          canvas.style.width = paneW + "px";
-          canvas.style.height = paneH - titleH + "px";
-          // canvas drawing buffer
-          canvas.width = paneW;
-          canvas.height = paneH - titleH;
-          drawTasks();
-        }
-
         function drawTasks() {
-          var w = canvas.width;
-          var h = canvas.height;
-          ctx.clearRect(0, 0, w, h);
-          var lineH = Math.floor(h / 10);
+          var rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          var lineH = canvas.height / 10;
           ctx.font = Math.floor(lineH * 0.6) + "px Arial";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "#000";
           ctx.strokeStyle = "#000";
-
           for (var i = 0; i < 10; i++) {
             var y = lineH * i + lineH / 2;
             // draw index
@@ -257,15 +245,14 @@
             var startX = Math.floor(lineH * 2.5);
             ctx.beginPath();
             ctx.moveTo(startX, y + Math.floor(lineH * 0.1));
-            ctx.lineTo(w - 10, y + Math.floor(lineH * 0.1));
+            ctx.lineTo(canvas.width - 10, y + Math.floor(lineH * 0.1));
             ctx.stroke();
-            // draw task
+            // draw text
             if (TODOS[i]) ctx.fillText(TODOS[i], startX, y);
           }
         }
-
-        window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
+        window.addEventListener("resize", drawTasks);
+        drawTasks();
       })();
     </script>
   </body>
