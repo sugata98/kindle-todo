@@ -1,4 +1,4 @@
-<!DOCTYPE html>More actions
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -43,12 +43,15 @@
         color: #000;
       }
       #container {
+        display: -webkit-flex;
         display: flex;
+        -webkit-flex-direction: column;
         flex-direction: column;
       }
 
       /* Calendar pane (40%) */
       .calendar-pane {
+        -webkit-flex: 0 0 40%;
         flex: 0 0 40%;
         padding: 10px;
         border-bottom: 1px solid #ccc;
@@ -92,8 +95,9 @@
 
       /* Tasks pane (60%) */
       .todo-pane {
+        -webkit-flex: 1 1 60%;
         flex: 1 1 60%;
-        padding: 10px 5px; /* less horizontal padding */
+        padding: 10px 5px;
         overflow: hidden !important;
       }
       .todo-title {
@@ -102,6 +106,7 @@
         margin-bottom: 20px;
       }
       .todo-item {
+        display: -webkit-table;
         display: table;
         width: 100%;
         margin-bottom: 32px;
@@ -111,14 +116,14 @@
       }
       .todo-item .idx {
         display: table-cell;
-        width: 2em; /* reduced width for tighter index */
+        width: 2em;
         font-weight: bold;
         vertical-align: middle;
       }
       .todo-item .label {
         display: table-cell;
         border-bottom: 1px solid #000;
-        padding-left: 8px; /* reduced padding */
+        padding-left: 8px;
         vertical-align: middle;
       }
     </style>
@@ -233,7 +238,7 @@
           if (date > daysInMonth) break;
         }
 
-        // Populate to-dos
+        // Populate to-dos with bold prefixes
         var todoList = document.getElementById("todo-list");
         var count = Math.max(TODOS.length, 10);
         for (var i = 0; i < count; i++) {
@@ -244,7 +249,20 @@
           idx.innerText = i + 1 + ")";
           var lbl = document.createElement("div");
           lbl.className = "label";
-          lbl.innerText = TODOS[i] || "";
+
+          var text = TODOS[i] || "";
+          var colonIndex = text.indexOf(":");
+          if (colonIndex !== -1) {
+            var prefix = text.substring(0, colonIndex + 1);
+            var rest = text.substring(colonIndex + 1).trim();
+            var strong = document.createElement("strong");
+            strong.innerText = prefix;
+            lbl.appendChild(strong);
+            if (rest) lbl.appendChild(document.createTextNode(" " + rest));
+          } else {
+            lbl.innerText = text;
+          }
+
           item.appendChild(idx);
           item.appendChild(lbl);
           todoList.appendChild(item);
