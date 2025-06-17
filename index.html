@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="refresh" content="3600" />
     <meta
@@ -12,39 +13,31 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
+      /* Fullscreen container and hide scroll */
       html,
-      body {
+      body,
+      #container {
         margin: 0;
         padding: 0;
         height: 100%;
         overflow: hidden;
-      }
-      /* Hide scrollbar */
-      ::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-      }
-      /* Reset */
-      /* Reset */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
       }
       body {
         font-family: Arial, sans-serif;
         background: #fff;
         color: #000;
-        height: 100vh;
-        overflow: hidden;
       }
       #container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         flex-direction: column;
-        height: 100%;
       }
 
-      /* Calendar area */
+      /* Calendar at top */
       .calendar-pane {
         padding: 10px;
         border-bottom: 1px solid #ccc;
@@ -54,7 +47,7 @@
         text-align: center;
         text-transform: uppercase;
         font-size: 1em;
-        margin-bottom: 16px;
+        margin-bottom: 8px;
       }
       #big-date {
         text-align: center;
@@ -85,7 +78,7 @@
         border-radius: 4px;
       }
 
-      /* Tasks area, no scrollbar */
+      /* Tasks below, no scroll */
       .todo-pane {
         padding: 10px;
         flex: 1;
@@ -94,7 +87,7 @@
       .todo-title {
         text-align: center;
         font-size: 1.8em;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
       }
       .todo-item {
         display: flex;
@@ -164,11 +157,15 @@
           "December",
         ];
         var today = new Date();
+
+        // Header
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
+
+        // Calendar
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -185,9 +182,11 @@
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
             var td = document.createElement("td");
-            if (r === 0 && c < firstDay) td.innerText = "";
-            else if (date > daysInMonth) td.innerText = "";
-            else {
+            if (r === 0 && c < firstDay) {
+              td.innerText = "";
+            } else if (date > daysInMonth) {
+              td.innerText = "";
+            } else {
               td.innerText = date;
               if (date === today.getDate()) td.className = "current";
               date++;
@@ -197,6 +196,8 @@
           calBody.appendChild(tr);
           if (date > daysInMonth) break;
         }
+
+        // To-dos
         var todoList = document.getElementById("todo-list");
         for (var i = 1; i <= 10; i++) {
           var item = document.createElement("div");
