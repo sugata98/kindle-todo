@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+<!DOCTYPE html>More actions
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="viewport"
@@ -16,13 +16,26 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
+      /* Full-screen fixed container, hide scrolling */
       html,
-      body {
+      body,
+      #container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         margin: 0;
         padding: 0;
-        width: 100%;
-        height: 100%;
         overflow: hidden;
+        overscroll-behavior: none;
+      }
+      *::-webkit-scrollbar {
+        display: none !important;
+      }
+      html {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
       body {
         font-family: Arial, sans-serif;
@@ -32,9 +45,9 @@
       #container {
         display: flex;
         flex-direction: column;
-        width: 100%;
-        height: 100%;
       }
+
+      /* Calendar pane (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -76,37 +89,37 @@
         color: #fff;
         border-radius: 4px;
       }
+
+      /* Tasks pane (60%) */
       .todo-pane {
-        flex: 1;
-        padding: 10px;
-        overflow: hidden;
+        flex: 1 1 60%;
+        padding: 10px 5px; /* less horizontal padding */
+        overflow: hidden !important;
       }
       .todo-title {
         text-align: center;
         font-size: 2em;
-        margin-bottom: 16px;
-      }
-      #todo-list {
-        display: flex;
-        flex-direction: column;
+        margin-bottom: 20px;
       }
       .todo-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 12px;
-        font-size: 1.3em;
+        display: table;
+        width: 100%;
+        margin-bottom: 32px;
+        font-size: 1.7em;
+        line-height: 1.2;
+        table-layout: fixed;
       }
       .todo-item .idx {
-        flex: 0 0 2em;
+        display: table-cell;
+        width: 2em; /* reduced width for tighter index */
         font-weight: bold;
+        vertical-align: middle;
       }
       .todo-item .label {
-        flex: 1;
+        display: table-cell;
         border-bottom: 1px solid #000;
-        padding-left: 8px;
-      }
-      .todo-item:last-child {
-        margin-bottom: 0;
+        padding-left: 8px; /* reduced padding */
+        vertical-align: middle;
       }
     </style>
   </head>
@@ -138,21 +151,26 @@
     </div>
     <script>
       (function () {
-        // Hardcoded tasks array
-        var TODOS = [
-          "Code: Merge sorted array",
-          "Code: Move zeros",
-          "Code:",
-          "Read: What are vectors",
-          "Read:",
-          "Read:",
-          "Shop:",
-          "Shop:",
-          "Misc:",
-          "Misc:",
-        ];
+        // Lock scrolling
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        document.getElementById("container").style.overflow = "hidden";
 
-        // Render calendar
+        // Load tasks from external JSON file
+        var TODOS = [];
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "todos.json", false);
+          xhr.overrideMimeType("application/json");
+          xhr.send(null);
+          if (xhr.status === 200) {
+            TODOS = JSON.parse(xhr.responseText);
+          }
+        } catch (e) {
+          console.log("Failed to load todos.json:", e);
+        }
+
+        // Date utilities
         var weekdays = [
           "Sunday",
           "Monday",
@@ -177,11 +195,15 @@
           "December",
         ];
         var today = new Date();
+
+        // Populate header
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
+
+        // Build calendar
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -192,28 +214,29 @@
           today.getMonth() + 1,
           0
         ).getDate();
-        var d = 1,
-          calBody = document.getElementById("calendar-body");
+        var date = 1;
+        var calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
             var td = document.createElement("td");
             if (r === 0 && c < firstDay) td.innerText = "";
-            else if (d > daysInMonth) td.innerText = "";
+            else if (date > daysInMonth) td.innerText = "";
             else {
-              td.innerText = d;
-              if (d === today.getDate()) td.className = "current";
-              d++;
+              td.innerText = date;
+              if (date === today.getDate()) td.className = "current";
+              date++;
             }
             tr.appendChild(td);
           }
           calBody.appendChild(tr);
-          if (d > daysInMonth) break;
+          if (date > daysInMonth) break;
         }
 
-        // Render to-dos
-        var list = document.getElementById("todo-list");
-        for (var i = 0; i < 10; i++) {
+        // Populate to-dos
+        var todoList = document.getElementById("todo-list");
+        var count = Math.max(TODOS.length, 10);
+        for (var i = 0; i < count; i++) {
           var item = document.createElement("div");
           item.className = "todo-item";
           var idx = document.createElement("span");
@@ -221,21 +244,10 @@
           idx.innerText = i + 1 + ")";
           var lbl = document.createElement("div");
           lbl.className = "label";
-          var text = TODOS[i] || "";
-          var colon = text.indexOf(":");
-          if (colon !== -1) {
-            var prefix = text.substring(0, colon + 1);
-            var rest = text.substring(colon + 1).trim();
-            var strong = document.createElement("strong");
-            strong.innerText = prefix;
-            lbl.appendChild(strong);
-            if (rest) lbl.appendChild(document.createTextNode(" " + rest));
-          } else {
-            lbl.innerText = text;
-          }
+          lbl.innerText = TODOS[i] || "";
           item.appendChild(idx);
           item.appendChild(lbl);
-          list.appendChild(item);
+          todoList.appendChild(item);
         }
       })();
     </script>
