@@ -34,44 +34,51 @@
         color: #000;
       }
       #container {
+        display: -webkit-flex;
         display: flex;
+        -webkit-flex-direction: column;
         flex-direction: column;
       }
 
-      /* Calendar pane (40%) with date + quote */
+      /* Calendar pane (40%) with date + quote as table */
       .calendar-pane {
+        -webkit-flex: 0 0 40%;
         flex: 0 0 40%;
         padding: 10px;
         border-bottom: 1px solid #ccc;
         overflow: hidden;
       }
-      .header-flex {
-        display: -webkit-flex;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+      .header-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 8px;
       }
-      .date-block {
+      .header-table td {
+        vertical-align: top;
+        padding: 0;
+      }
+      .header-date {
         text-align: left;
-        margin-left: 4%;
       }
       #big-date {
         font-size: 3.5em;
         line-height: 1;
+        margin: 0;
       }
       #subdate {
         font-size: 1.2em;
+        margin: 0;
       }
-      .quote-block {
-        max-width: 40%;
+      .header-quote {
         text-align: right;
+        max-width: 40%;
       }
-      .quote-block em {
+      .header-quote em {
         font-style: italic;
         font-weight: bold;
         display: block;
       }
-      .quote-block strong {
+      .header-quote strong {
         display: block;
         margin-top: 4px;
         font-style: normal;
@@ -101,6 +108,7 @@
 
       /* Tasks pane (60%) */
       .todo-pane {
+        -webkit-flex: 1 1 60%;
         flex: 1 1 60%;
         padding: 10px 5px;
         overflow: hidden;
@@ -135,13 +143,15 @@
   <body>
     <div id="container">
       <div class="calendar-pane">
-        <div class="header-flex">
-          <div class="date-block">
-            <div id="big-date"></div>
-            <div id="subdate"></div>
-          </div>
-          <div class="quote-block" id="quote"></div>
-        </div>
+        <table class="header-table">
+          <tr>
+            <td class="header-date">
+              <div id="big-date"></div>
+              <div id="subdate"></div>
+            </td>
+            <td class="header-quote" id="quote"></td>
+          </tr>
+        </table>
         <table class="calendar-table">
           <thead>
             <tr>
