@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="viewport"
@@ -16,7 +16,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Full-screen fixed container */
+      /* Fullscreen fixed container */
       html,
       body,
       #container {
@@ -49,7 +49,7 @@
         flex-direction: column;
       }
 
-      /* Calendar pane (40%), show weekday */
+      /* Calendar pane (40%), hide weekday */
       .calendar-pane {
         -webkit-flex: 0 0 40%;
         flex: 0 0 40%;
@@ -57,18 +57,6 @@
         border-bottom: 1px solid #ccc;
         overflow: hidden;
       }
-      #weekday {
-        text-align: center;
-        text-transform: uppercase;
-        font-size: 1em;
-        margin-bottom: 4px;
-      }
-      #big-date {
-        text-align: center;
-        font-size: 3.5em;
-        margin-bottom: 4px;
-      }
-      /* Big date only */
       #big-date {
         text-align: center;
         font-size: 3.5em;
@@ -137,7 +125,6 @@
   <body>
     <div id="container">
       <div class="calendar-pane">
-        <div id="weekday"></div>
         <div id="big-date"></div>
         <div id="subdate"></div>
         <table class="calendar-table">
@@ -168,11 +155,10 @@
           document.body,
           document.getElementById("container"),
         ];
-        for (var i = 0; i < elems.length; i++) {
+        for (var i = 0; i < elems.length; i++)
           if (elems[i]) elems[i].style.overflow = "hidden";
-        }
 
-        // Load todos.json synchronously
+        // Load tasks
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
@@ -180,43 +166,42 @@
           xhr.overrideMimeType("application/json");
           xhr.send(null);
           if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
-        } catch (e) {
-          console.log("Load todos.json failed", e);
-        }
+        } catch (e) {}
         while (TODOS.length < 10) TODOS.push("");
 
-        // Render calendar
-        var today = new Date();
-        document.getElementById("big-date").innerText = today.getDate();
+        // Get IST date
+        var now = new Date();
+        var utc = now.getTime() + now.getTimezoneOffset() * 60000;
+        var ist = new Date(utc + 5.5 * 60 * 60000);
+
+        // Populate date
+        document.getElementById("big-date").innerText = ist.getDate();
+        var months = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
         document.getElementById("subdate").innerText =
-          [
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-          ][today.getMonth()] +
-          " " +
-          today.getFullYear();
-        var firstDay = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          1
-        ).getDay();
+          months[ist.getMonth()] + " " + ist.getFullYear();
+
+        // Build calendar grid
+        var firstDay = new Date(ist.getFullYear(), ist.getMonth(), 1).getDay();
         var daysInMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() + 1,
+          ist.getFullYear(),
+          ist.getMonth() + 1,
           0
         ).getDate();
-        var d = 1,
-          calBody = document.getElementById("calendar-body");
+        var d = 1;
+        var calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
@@ -225,7 +210,7 @@
             else if (d > daysInMonth) td.innerText = "";
             else {
               td.innerText = d;
-              if (d === today.getDate()) td.className = "current";
+              if (d === ist.getDate()) td.className = "current";
               d++;
             }
             tr.appendChild(td);
@@ -234,7 +219,7 @@
           if (d > daysInMonth) break;
         }
 
-        // Populate to-dos with bold prefixes
+        // Populate todos with bold prefix
         var todoList = document.getElementById("todo-list");
         for (var i = 0; i < 10; i++) {
           var item = document.createElement("div");
@@ -244,18 +229,16 @@
           idx.innerText = i + 1 + ")";
           var lbl = document.createElement("div");
           lbl.className = "label";
-          var text = TODOS[i] || "";
-          var colonIndex = text.indexOf(":");
-          if (colonIndex !== -1) {
-            var prefix = text.substring(0, colonIndex + 1);
-            var rest = text.substring(colonIndex + 1).trim();
+          var txt = TODOS[i] || "";
+          var ci = txt.indexOf(":");
+          if (ci !== -1) {
+            var pre = txt.substring(0, ci + 1),
+              rest = txt.substring(ci + 1).trim();
             var strong = document.createElement("strong");
-            strong.innerText = prefix;
+            strong.innerText = pre;
             lbl.appendChild(strong);
             if (rest) lbl.appendChild(document.createTextNode(" " + rest));
-          } else {
-            lbl.innerText = text;
-          }
+          } else lbl.innerText = txt;
           item.appendChild(idx);
           item.appendChild(lbl);
           todoList.appendChild(item);
