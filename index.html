@@ -16,7 +16,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Full-screen fixed container, hide scrolling */
+      /* Full-screen fixed container */
       html,
       body,
       #container {
@@ -49,7 +49,7 @@
         flex-direction: column;
       }
 
-      /* Calendar pane (40%) */
+      /* Calendar pane (40%), show weekday */
       .calendar-pane {
         -webkit-flex: 0 0 40%;
         flex: 0 0 40%;
@@ -61,8 +61,14 @@
         text-align: center;
         text-transform: uppercase;
         font-size: 1em;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
+      #big-date {
+        text-align: center;
+        font-size: 3.5em;
+        margin-bottom: 4px;
+      }
+      /* Big date only */
       #big-date {
         text-align: center;
         font-size: 3.5em;
@@ -157,58 +163,48 @@
     <script>
       (function () {
         // Lock scrolling
-        document.documentElement.style.overflow = "hidden";
-        document.body.style.overflow = "hidden";
-        document.getElementById("container").style.overflow = "hidden";
+        var elems = [
+          document.documentElement,
+          document.body,
+          document.getElementById("container"),
+        ];
+        for (var i = 0; i < elems.length; i++) {
+          if (elems[i]) elems[i].style.overflow = "hidden";
+        }
 
-        // Load tasks from external JSON file
+        // Load todos.json synchronously
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", "todos.json", false);
           xhr.overrideMimeType("application/json");
           xhr.send(null);
-          if (xhr.status === 200) {
-            TODOS = JSON.parse(xhr.responseText);
-          }
+          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
         } catch (e) {
-          console.log("Failed to load todos.json:", e);
+          console.log("Load todos.json failed", e);
         }
+        while (TODOS.length < 10) TODOS.push("");
 
-        // Date utilities
-        var weekdays = [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-        ];
-        var months = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
+        // Render calendar
         var today = new Date();
-
-        // Populate header
-        document.getElementById("weekday").innerText =
-          weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
-          months[today.getMonth()] + " " + today.getFullYear();
-
-        // Build calendar
+          [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ][today.getMonth()] +
+          " " +
+          today.getFullYear();
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -219,29 +215,28 @@
           today.getMonth() + 1,
           0
         ).getDate();
-        var date = 1;
-        var calBody = document.getElementById("calendar-body");
+        var d = 1,
+          calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
             var td = document.createElement("td");
             if (r === 0 && c < firstDay) td.innerText = "";
-            else if (date > daysInMonth) td.innerText = "";
+            else if (d > daysInMonth) td.innerText = "";
             else {
-              td.innerText = date;
-              if (date === today.getDate()) td.className = "current";
-              date++;
+              td.innerText = d;
+              if (d === today.getDate()) td.className = "current";
+              d++;
             }
             tr.appendChild(td);
           }
           calBody.appendChild(tr);
-          if (date > daysInMonth) break;
+          if (d > daysInMonth) break;
         }
 
         // Populate to-dos with bold prefixes
         var todoList = document.getElementById("todo-list");
-        var count = Math.max(TODOS.length, 10);
-        for (var i = 0; i < count; i++) {
+        for (var i = 0; i < 10; i++) {
           var item = document.createElement("div");
           item.className = "todo-item";
           var idx = document.createElement("span");
@@ -249,7 +244,6 @@
           idx.innerText = i + 1 + ")";
           var lbl = document.createElement("div");
           lbl.className = "label";
-
           var text = TODOS[i] || "";
           var colonIndex = text.indexOf(":");
           if (colonIndex !== -1) {
@@ -262,7 +256,6 @@
           } else {
             lbl.innerText = text;
           }
-
           item.appendChild(idx);
           item.appendChild(lbl);
           todoList.appendChild(item);
