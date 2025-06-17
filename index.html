@@ -16,21 +16,27 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen fixed container, hide overflow */
+      /* Hide all scrolling and scrollbars */
       html,
-      body,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden !important;
+        overscroll-behavior: none;
+      }
       #container {
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        overscroll-behavior: none;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
       }
-      /* Hide scrollbars universally */
+      /* WebKit and IE scrollbar hide */
       *::-webkit-scrollbar {
         display: none !important;
       }
@@ -44,18 +50,12 @@
         background: #fff;
         color: #000;
       }
-
-      #container {
-        display: flex;
-        flex-direction: column;
-      }
-
-      /* Calendar pane: 40% of height */
+      /* Calendar pane (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
         border-bottom: 1px solid #ccc;
-        overflow: hidden;
+        overflow: hidden !important;
       }
       #weekday {
         text-align: center;
@@ -93,11 +93,11 @@
         border-radius: 4px;
       }
 
-      /* Tasks pane: 60% of height */
+      /* Tasks pane (60%) */
       .todo-pane {
-        flex: 1;
+        flex: 1 1 60%;
         padding: 10px;
-        overflow: hidden;
+        overflow: hidden !important;
       }
       .todo-title {
         text-align: center;
@@ -148,6 +148,35 @@
     </div>
     <script>
       (function () {
+        // Force hide any scrolling
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+        var container = document.getElementById("container");
+        container.style.overflow = "hidden";
+
+        // Resize container to actual viewport
+        function fit() {
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+          container.style.width = w + "px";
+          container.style.height = h + "px";
+        }
+        fit();
+        window.addEventListener("resize", fit);
+
+        // === Edit your tasks here ===
+        var TODOS = [
+          "Merge sorted array",
+          "Move zeros",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ];
         var weekdays = [
           "Sunday",
           "Monday",
@@ -172,12 +201,14 @@
           "December",
         ];
         var today = new Date();
+
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
 
+        // Calendar build
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -207,8 +238,9 @@
           if (date > daysInMonth) break;
         }
 
+        // Populate tasks
         var todoList = document.getElementById("todo-list");
-        for (var i = 1; i <= 10; i++) {
+        for (var i = 1; i <= TODOS.length; i++) {
           var item = document.createElement("div");
           item.className = "todo-item";
           var idx = document.createElement("span");
@@ -216,7 +248,7 @@
           idx.innerText = i + ")";
           var lbl = document.createElement("div");
           lbl.className = "label";
-          lbl.innerText = "";
+          lbl.innerText = TODOS[i - 1] || "";
           item.appendChild(idx);
           item.appendChild(lbl);
           todoList.appendChild(item);
