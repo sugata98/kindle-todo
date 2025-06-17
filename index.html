@@ -93,8 +93,8 @@
       /* Tasks pane (60%) */
       .todo-pane {
         flex: 1 1 60%;
-        padding: 10px;
-        overflow: hidden;
+        padding: 10px 5px; /* less horizontal padding */
+        overflow: hidden !important;
       }
       .todo-title {
         text-align: center;
@@ -109,7 +109,7 @@
         line-height: 1.2;
       }
       .todo-item .idx {
-        width: 4em;
+        width: 2em; /* reduced width for tighter numbers */
         font-weight: bold;
       }
       .todo-item .label {
