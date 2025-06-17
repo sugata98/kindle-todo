@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=758, height=1024, initial-scale=1.0, user-scalable=no"
+    />
     <meta http-equiv="refresh" content="3600" />
     <meta
       http-equiv="Cache-Control"
@@ -13,13 +16,17 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen container and hide scroll */
-      html,
-      body,
-      #container {
+      /* Reset */
+      * {
         margin: 0;
         padding: 0;
-        height: 100%;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 758px;
+        height: 1024px;
+        margin: 0 auto;
         overflow: hidden;
       }
       body {
@@ -28,20 +35,20 @@
         color: #000;
       }
       #container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        width: 758px;
+        height: 1024px;
+        position: relative;
         display: flex;
         flex-direction: column;
       }
 
-      /* Calendar at top */
+      /* Calendar area fixed height */
       .calendar-pane {
         padding: 10px;
         border-bottom: 1px solid #ccc;
+        height: 400px;
         flex: none;
+        overflow: hidden;
       }
       #weekday {
         text-align: center;
@@ -78,10 +85,11 @@
         border-radius: 4px;
       }
 
-      /* Tasks below, no scroll */
+      /* Tasks area fixed height */
       .todo-pane {
         padding: 10px;
-        flex: 1;
+        height: 624px;
+        flex: none;
         overflow: hidden;
       }
       .todo-title {
@@ -157,15 +165,11 @@
           "December",
         ];
         var today = new Date();
-
-        // Header
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
-
-        // Calendar
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -196,8 +200,6 @@
           calBody.appendChild(tr);
           if (date > daysInMonth) break;
         }
-
-        // To-dos
         var todoList = document.getElementById("todo-list");
         for (var i = 1; i <= 10; i++) {
           var item = document.createElement("div");
