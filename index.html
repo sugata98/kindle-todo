@@ -16,7 +16,6 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen layout */
       html,
       body {
         margin: 0;
@@ -36,8 +35,6 @@
         width: 100%;
         height: 100%;
       }
-
-      /* Calendar (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -79,44 +76,37 @@
         color: #fff;
         border-radius: 4px;
       }
-
-      /* To-do pane (60%), flex column */
       .todo-pane {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
+        flex: 1;
         padding: 10px;
         overflow: hidden;
       }
       .todo-title {
-        flex: 0 0 auto;
         text-align: center;
         font-size: 2em;
-        margin-bottom: 8px;
+        margin-bottom: 16px;
       }
       #todo-list {
-        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
       }
       .todo-item {
-        flex: 0 0 auto;
         display: flex;
         align-items: center;
+        margin-bottom: 12px;
         font-size: 1.3em;
-        line-height: 1.2;
-      }
-      .todo-item + .todo-item {
-        margin-top: 8px;
       }
       .todo-item .idx {
         flex: 0 0 2em;
         font-weight: bold;
       }
       .todo-item .label {
-        flex: 1 1 auto;
+        flex: 1;
         border-bottom: 1px solid #000;
         padding-left: 8px;
+      }
+      .todo-item:last-child {
+        margin-bottom: 0;
       }
     </style>
   </head>
@@ -148,24 +138,19 @@
     </div>
     <script>
       (function () {
-        // Prevent any scrolling
-        [document.documentElement, document.body].forEach(
-          (el) => (el.style.overflow = "hidden")
-        );
-
-        // Load todos.json synchronously
-        var TODOS = [];
-        try {
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", "todos.json", false);
-          xhr.overrideMimeType("application/json");
-          xhr.send(null);
-          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
-        } catch (e) {
-          console.log("Load todos.json failed", e);
-        }
-        // Ensure 10 entries
-        while (TODOS.length < 10) TODOS.push("");
+        // Hardcoded tasks array
+        var TODOS = [
+          "Code: Merge sorted array",
+          "Code: Move zeros",
+          "Code:",
+          "Read: What are vectors",
+          "Read:",
+          "Read:",
+          "Shop:",
+          "Shop:",
+          "Misc:",
+          "Misc:",
+        ];
 
         // Render calendar
         var weekdays = [
@@ -197,7 +182,6 @@
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
-
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -227,7 +211,7 @@
           if (d > daysInMonth) break;
         }
 
-        // Render tasks
+        // Render to-dos
         var list = document.getElementById("todo-list");
         for (var i = 0; i < 10; i++) {
           var item = document.createElement("div");
@@ -238,16 +222,17 @@
           var lbl = document.createElement("div");
           lbl.className = "label";
           var text = TODOS[i] || "";
-          // Bold prefix
           var colon = text.indexOf(":");
           if (colon !== -1) {
-            var prefix = text.slice(0, colon + 1);
-            var rest = text.slice(colon + 1).trim();
+            var prefix = text.substring(0, colon + 1);
+            var rest = text.substring(colon + 1).trim();
             var strong = document.createElement("strong");
             strong.innerText = prefix;
             lbl.appendChild(strong);
             if (rest) lbl.appendChild(document.createTextNode(" " + rest));
-          } else lbl.innerText = text;
+          } else {
+            lbl.innerText = text;
+          }
           item.appendChild(idx);
           item.appendChild(lbl);
           list.appendChild(item);
