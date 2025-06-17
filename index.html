@@ -6,92 +6,80 @@
     <meta http-equiv="refresh" content="3600" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Font from ecal.ink */
-      @font-face {
-        font-family: "Overused Grotesk";
-        src: url("/fonts/OverusedGrotesk-Bold.woff") format("woff");
-        font-weight: bold;
-        font-style: normal;
-        font-display: swap;
-      }
+      /* Reset and base */
       * {
-        box-sizing: border-box;
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
       }
       body {
-        font-family: "Overused Grotesk", Arial, sans-serif;
+        font-family: Arial, sans-serif;
         background: #fff;
         color: #000;
-        overflow: hidden;
-      }
-      #container {
-        display: flex;
-        flex-direction: column;
         height: 100vh;
-        overflow: hidden;
       }
-      @media (orientation: landscape) {
-        #container {
-          flex-direction: row;
-        }
+
+      /* Two-column layout using table for better legacy support */
+      #container {
+        display: table;
+        width: 100%;
+        height: 100%;
+        table-layout: fixed;
+      }
+      .calendar-pane,
+      .todo-pane {
+        display: table-cell;
+        vertical-align: top;
       }
       .calendar-pane {
-        flex: 1;
-        position: relative;
-        padding: 20px;
-        border-bottom: 1px solid #ccc;
+        width: 40%;
+        padding: 10px;
+        border-right: 1px solid #ccc;
       }
-      @media (orientation: landscape) {
-        .calendar-pane {
-          border-bottom: none;
-          border-right: 1px solid #ccc;
-        }
+      .todo-pane {
+        width: 60%;
+        padding: 10px;
+        overflow-y: auto;
       }
-      .weekday-vertical {
-        position: absolute;
-        top: 30px;
-        left: 20px;
-        transform-origin: left top;
-        transform: rotate(-90deg);
+
+      /* Date + month/year styling */
+      #weekday {
         font-size: 1em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
       }
-      .header-date {
-        text-align: center;
+      #big-date {
         font-size: 4em;
         line-height: 1;
-        margin-top: 20px;
-      }
-      .subdate {
         text-align: center;
-        font-size: 1.2em;
-        margin-top: -0.2em;
       }
+      #subdate {
+        font-size: 1.2em;
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      /* Calendar table */
       .calendar {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 20px;
+        font-size: 0.9em;
+      }
+      .calendar th,
+      .calendar td {
+        text-align: center;
+        padding: 4px 0;
       }
       .calendar th {
-        font-size: 1em;
-        padding: 6px 0;
-      }
-      .calendar td {
-        width: 14.28%;
-        text-align: center;
-        padding: 8px 0;
-        font-size: 1em;
+        font-weight: bold;
       }
       .calendar td.current {
         background: #000;
         color: #fff;
         border-radius: 4px;
       }
-      .todo-pane {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-      }
+
+      /* Tasks styling */
       .todo-title {
         font-size: 2em;
         text-align: center;
@@ -100,31 +88,30 @@
       .todo-item {
         display: flex;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
+        font-size: 1em;
       }
       .todo-item span {
         width: 1.5em;
-        font-size: 1em;
       }
       .todo-item .label {
         flex: 1;
         border-bottom: 1px solid #000;
-        margin-left: 10px;
-        font-size: 1em;
+        margin-left: 8px;
       }
       .todo-item .checkbox {
         margin-left: auto;
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
       }
     </style>
   </head>
   <body>
     <div id="container">
       <div class="calendar-pane">
-        <div class="weekday-vertical" id="weekday"></div>
-        <div class="header-date" id="big-date"></div>
-        <div class="subdate" id="subdate"></div>
+        <div id="weekday"></div>
+        <div id="big-date"></div>
+        <div id="subdate"></div>
         <table class="calendar">
           <thead>
             <tr>
@@ -147,7 +134,7 @@
     </div>
 
     <script>
-      const today = new Date();
+      // Data arrays
       const weekdays = [
         "Sunday",
         "Monday",
@@ -171,8 +158,9 @@
         "November",
         "December",
       ];
+      const today = new Date();
 
-      // Header content
+      // Header date
       document.getElementById("weekday").textContent =
         weekdays[today.getDay()].toUpperCase();
       document.getElementById("big-date").textContent = today.getDate();
@@ -180,7 +168,6 @@
         months[today.getMonth()] + " " + today.getFullYear();
 
       // Build calendar
-      const calBody = document.getElementById("calendar-body");
       const firstDay = new Date(
         today.getFullYear(),
         today.getMonth(),
@@ -192,41 +179,42 @@
         0
       ).getDate();
       let date = 1;
-      for (let i = 0; i < 6; i++) {
-        const row = document.createElement("tr");
-        for (let j = 0; j < 7; j++) {
-          const cell = document.createElement("td");
-          if (i === 0 && j < firstDay) {
-            cell.textContent = "";
+      const calBody = document.getElementById("calendar-body");
+      for (let row = 0; row < 6; row++) {
+        const tr = document.createElement("tr");
+        for (let col = 0; col < 7; col++) {
+          const td = document.createElement("td");
+          if (row === 0 && col < firstDay) {
+            td.textContent = "";
           } else if (date > daysInMonth) {
-            cell.textContent = "";
+            td.textContent = "";
           } else {
-            cell.textContent = date;
-            if (date === today.getDate()) cell.classList.add("current");
+            td.textContent = date;
+            if (date === today.getDate()) td.classList.add("current");
             date++;
           }
-          row.appendChild(cell);
+          tr.appendChild(td);
         }
-        calBody.appendChild(row);
+        calBody.appendChild(tr);
         if (date > daysInMonth) break;
       }
 
-      // To-do list slots
-      const todoList = document.getElementById("todo-list");
+      // Generate to-do slots
+      const list = document.getElementById("todo-list");
       for (let i = 1; i <= 10; i++) {
-        const item = document.createElement("div");
-        item.className = "todo-item";
+        const div = document.createElement("div");
+        div.className = "todo-item";
         const idx = document.createElement("span");
         idx.textContent = i + ")";
-        const label = document.createElement("div");
-        label.className = "label";
-        label.textContent = "";
-        const chk = document.createElement("input");
-        chk.type = "checkbox";
-        chk.disabled = true;
-        chk.className = "checkbox";
-        item.append(idx, label, chk);
-        todoList.appendChild(item);
+        const lbl = document.createElement("div");
+        lbl.className = "label";
+        lbl.textContent = "";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.disabled = true;
+        cb.className = "checkbox";
+        div.append(idx, lbl, cb);
+        list.append(div);
       }
     </script>
   </body>
