@@ -4,84 +4,145 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="refresh" content="3600" />
-    <!-- Auto-refresh every hour -->
-    <title>Things To Do</title>
+    <title>Smart Kindle Dashboard</title>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: white;
-        color: black;
-        margin: 0;
-        padding: 10px;
-        width: 100vw;
-        height: 100vh;
-        box-sizing: border-box;
-      }
-      .header {
-        display: block;
-        text-align: center;
-        font-size: 1.5em;
+      /* Font from ecal.ink */
+      @font-face {
+        font-family: "Overused Grotesk";
+        src: url("/fonts/OverusedGrotesk-Bold.woff") format("woff");
         font-weight: bold;
-        border-bottom: 2px solid black;
-        padding-bottom: 10px;
+        font-style: normal;
+        font-display: swap;
       }
-      .date-line {
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Overused Grotesk", Arial, sans-serif;
+        background: #fff;
+        color: #000;
+        overflow: hidden;
+      }
+      #container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+      @media (orientation: landscape) {
+        #container {
+          flex-direction: row;
+        }
+      }
+      .calendar-pane {
+        flex: 1;
+        position: relative;
+        padding: 20px;
+        border-bottom: 1px solid #ccc;
+      }
+      @media (orientation: landscape) {
+        .calendar-pane {
+          border-bottom: none;
+          border-right: 1px solid #ccc;
+        }
+      }
+      .weekday-vertical {
+        position: absolute;
+        top: 30px;
+        left: 20px;
+        transform-origin: left top;
+        transform: rotate(-90deg);
         font-size: 1em;
-        margin: 10px 0;
+      }
+      .header-date {
         text-align: center;
+        font-size: 4em;
+        line-height: 1;
+        margin-top: 20px;
+      }
+      .subdate {
+        text-align: center;
+        font-size: 1.2em;
+        margin-top: -0.2em;
+      }
+      .calendar {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      .calendar th {
+        font-size: 1em;
+        padding: 6px 0;
+      }
+      .calendar td {
+        width: 14.28%;
+        text-align: center;
+        padding: 8px 0;
+        font-size: 1em;
+      }
+      .calendar td.current {
+        background: #000;
+        color: #fff;
+        border-radius: 4px;
+      }
+      .todo-pane {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+      }
+      .todo-title {
+        font-size: 2em;
+        text-align: center;
+        margin-bottom: 12px;
       }
       .todo-item {
         display: flex;
         align-items: center;
-        padding: 6px 0;
-        font-size: 1em;
+        margin-bottom: 10px;
       }
       .todo-item span {
-        width: 2em;
+        width: 1.5em;
+        font-size: 1em;
       }
-      .checkbox {
+      .todo-item .label {
+        flex: 1;
+        border-bottom: 1px solid #000;
+        margin-left: 10px;
+        font-size: 1em;
+      }
+      .todo-item .checkbox {
         margin-left: auto;
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
       }
     </style>
   </head>
   <body>
-    <div class="header">THINGS TO DO <span id="today-day"></span></div>
-    <div class="date-line">
-      Date: <span id="today-date"></span> <span id="today-day-inline"></span>
-    </div>
-
-    <div id="todo-list">
-      <div class="todo-item">
-        <span>1)</span><input class="checkbox" type="checkbox" disabled />
+    <div id="container">
+      <div class="calendar-pane">
+        <div class="weekday-vertical" id="weekday"></div>
+        <div class="header-date" id="big-date"></div>
+        <div class="subdate" id="subdate"></div>
+        <table class="calendar">
+          <thead>
+            <tr>
+              <th>Sun</th>
+              <th>Mon</th>
+              <th>Tue</th>
+              <th>Wed</th>
+              <th>Thu</th>
+              <th>Fri</th>
+              <th>Sat</th>
+            </tr>
+          </thead>
+          <tbody id="calendar-body"></tbody>
+        </table>
       </div>
-      <div class="todo-item">
-        <span>2)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>3)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>4)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>5)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>6)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>7)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>8)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>9)</span><input class="checkbox" type="checkbox" disabled />
-      </div>
-      <div class="todo-item">
-        <span>10)</span><input class="checkbox" type="checkbox" disabled />
+      <div class="todo-pane">
+        <div class="todo-title">TODAY'S TASKS</div>
+        <div id="todo-list"></div>
       </div>
     </div>
 
@@ -96,11 +157,77 @@
         "Friday",
         "Saturday",
       ];
-      document.getElementById("today-date").textContent =
-        today.toLocaleDateString();
-      const day = weekdays[today.getDay()].toUpperCase();
-      document.getElementById("today-day").textContent = day;
-      document.getElementById("today-day-inline").textContent = day;
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+
+      // Header content
+      document.getElementById("weekday").textContent =
+        weekdays[today.getDay()].toUpperCase();
+      document.getElementById("big-date").textContent = today.getDate();
+      document.getElementById("subdate").textContent =
+        months[today.getMonth()] + " " + today.getFullYear();
+
+      // Build calendar
+      const calBody = document.getElementById("calendar-body");
+      const firstDay = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      ).getDay();
+      const daysInMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      ).getDate();
+      let date = 1;
+      for (let i = 0; i < 6; i++) {
+        const row = document.createElement("tr");
+        for (let j = 0; j < 7; j++) {
+          const cell = document.createElement("td");
+          if (i === 0 && j < firstDay) {
+            cell.textContent = "";
+          } else if (date > daysInMonth) {
+            cell.textContent = "";
+          } else {
+            cell.textContent = date;
+            if (date === today.getDate()) cell.classList.add("current");
+            date++;
+          }
+          row.appendChild(cell);
+        }
+        calBody.appendChild(row);
+        if (date > daysInMonth) break;
+      }
+
+      // To-do list slots
+      const todoList = document.getElementById("todo-list");
+      for (let i = 1; i <= 10; i++) {
+        const item = document.createElement("div");
+        item.className = "todo-item";
+        const idx = document.createElement("span");
+        idx.textContent = i + ")";
+        const label = document.createElement("div");
+        label.className = "label";
+        label.textContent = "";
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.disabled = true;
+        chk.className = "checkbox";
+        item.append(idx, label, chk);
+        todoList.appendChild(item);
+      }
     </script>
   </body>
 </html>
