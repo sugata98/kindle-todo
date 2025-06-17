@@ -16,31 +16,40 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Prevent any scrolling */
+      /* Fullscreen fixed container, hide overflow */
       html,
-      body {
-        width: 100%;
-        height: 100%;
+      body,
+      #container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         margin: 0;
         padding: 0;
         overflow: hidden;
         overscroll-behavior: none;
       }
-      /* Hide scrollbars in WebKit */
-      ::-webkit-scrollbar {
-        display: none;
+      /* Hide scrollbars universally */
+      *::-webkit-scrollbar {
+        display: none !important;
       }
+      html {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
       body {
         font-family: Arial, sans-serif;
         background: #fff;
         color: #000;
       }
+
       #container {
         display: flex;
         flex-direction: column;
-        width: 100%;
-        height: 100%;
       }
+
       /* Calendar pane: 40% of height */
       .calendar-pane {
         flex: 0 0 40%;
@@ -68,6 +77,7 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 1em;
+        table-layout: fixed;
       }
       .calendar-table th,
       .calendar-table td {
@@ -82,9 +92,10 @@
         color: #fff;
         border-radius: 4px;
       }
+
       /* Tasks pane: 60% of height */
       .todo-pane {
-        flex: 1 1 60%;
+        flex: 1;
         padding: 10px;
         overflow: hidden;
       }
@@ -166,6 +177,7 @@
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
+
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -194,6 +206,7 @@
           calBody.appendChild(tr);
           if (date > daysInMonth) break;
         }
+
         var todoList = document.getElementById("todo-list");
         for (var i = 1; i <= 10; i++) {
           var item = document.createElement("div");
