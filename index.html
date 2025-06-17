@@ -16,26 +16,14 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen fixed container, hide overflow */
+      /* Fullscreen fixed container */
       html,
-      body,
-      #container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+      body {
         margin: 0;
         padding: 0;
+        width: 100%;
+        height: 100%;
         overflow: hidden;
-        overscroll-behavior: none;
-      }
-      *::-webkit-scrollbar {
-        display: none !important;
-      }
-      html {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
       }
       body {
         font-family: Arial, sans-serif;
@@ -45,9 +33,11 @@
       #container {
         display: flex;
         flex-direction: column;
+        width: 100%;
+        height: 100%;
       }
 
-      /* Calendar (40%) */
+      /* Calendar pane (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -90,26 +80,31 @@
         border-radius: 4px;
       }
 
-      /* Tasks pane (60%) using canvas */
+      /* Tasks pane (60%) */
       .todo-pane {
-        flex: 1 1 60%;
-        position: relative;
+        flex: 1;
+        padding: 10px;
         overflow: hidden;
       }
       .todo-title {
         text-align: center;
         font-size: 2em;
-        line-height: 2.5em;
-        height: 2.5em;
-        margin: 0;
+        margin-bottom: 16px;
       }
-      #todo-canvas {
-        position: absolute;
-        top: 2.5em;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: block;
+      .todo-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+        font-size: 1.7em;
+      }
+      .todo-item .idx {
+        width: 2em;
+        font-weight: bold;
+      }
+      .todo-item .label {
+        flex: 1;
+        border-bottom: 1px solid #000;
+        margin-left: 8px;
       }
     </style>
   </head>
@@ -136,35 +131,24 @@
       </div>
       <div class="todo-pane">
         <div class="todo-title">TODAY'S TASKS</div>
-        <canvas id="todo-canvas"></canvas>
+        <div id="todo-list"></div>
       </div>
     </div>
     <script>
       (function () {
-        // Disable scrolling
-        [
-          document.documentElement,
-          document.body,
-          document.getElementById("container"),
-        ].forEach((el) => {
-          if (el) el.style.overflow = "hidden";
-        });
-
-        // Load external todos.json (HTTP same-origin)
+        // Load todos
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", "todos.json", false);
           xhr.overrideMimeType("application/json");
           xhr.send(null);
-          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
-        } catch (e) {
-          console.log("todos.json load failed", e);
-        }
-        // pad to exactly 10 entries
+          if (xhr.status === 200) GRID = JSON.parse(xhr.responseText);
+          TODOS = JSON.parse(xhr.responseText);
+        } catch (e) {}
         while (TODOS.length < 10) TODOS.push("");
 
-        // Render calendar (DOM)
+        // Render calendar
         var weekdays = [
           "Sunday",
           "Monday",
@@ -189,6 +173,7 @@
           "December",
         ];
         var today = new Date();
+
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
@@ -224,35 +209,21 @@
           if (d > daysInMonth) break;
         }
 
-        // Canvas for tasks
-        var canvas = document.getElementById("todo-canvas");
-        var ctx = canvas.getContext("2d");
-        function drawTasks() {
-          var rect = canvas.getBoundingClientRect();
-          canvas.width = rect.width;
-          canvas.height = rect.height;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          var lineH = canvas.height / 10;
-          ctx.font = Math.floor(lineH * 0.6) + "px Arial";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = "#000";
-          ctx.strokeStyle = "#000";
-          for (var i = 0; i < 10; i++) {
-            var y = lineH * i + lineH / 2;
-            // draw index
-            ctx.fillText(i + 1 + ")", 10, y);
-            // draw underline
-            var startX = Math.floor(lineH * 2.5);
-            ctx.beginPath();
-            ctx.moveTo(startX, y + Math.floor(lineH * 0.1));
-            ctx.lineTo(canvas.width - 10, y + Math.floor(lineH * 0.1));
-            ctx.stroke();
-            // draw text
-            if (TODOS[i]) ctx.fillText(TODOS[i], startX, y);
-          }
+        // Render tasks as DOM
+        var list = document.getElementById("todo-list");
+        for (var i = 0; i < 10; i++) {
+          var item = document.createElement("div");
+          item.className = "todo-item";
+          var idx = document.createElement("span");
+          idx.className = "idx";
+          idx.innerText = i + 1 + ")";
+          var lbl = document.createElement("div");
+          lbl.className = "label";
+          lbl.innerText = TODOS[i] || "";
+          item.appendChild(idx);
+          item.appendChild(lbl);
+          list.appendChild(item);
         }
-        window.addEventListener("resize", drawTasks);
-        drawTasks();
       })();
     </script>
   </body>
