@@ -12,7 +12,7 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Basic reset */
+      /* Reset */
       * {
         margin: 0;
         padding: 0;
@@ -72,11 +72,11 @@
         border-radius: 4px;
       }
 
-      /* Tasks area */
+      /* Tasks area, no scrollbar */
       .todo-pane {
         padding: 10px;
-        overflow-y: auto;
         flex: 1;
+        overflow: hidden;
       }
       .todo-title {
         text-align: center;
@@ -96,11 +96,6 @@
         flex: 1;
         border-bottom: 1px solid #000;
         margin-left: 8px;
-      }
-      .todo-item .checkbox {
-        margin-left: auto;
-        width: 16px;
-        height: 16px;
       }
     </style>
   </head>
@@ -132,7 +127,6 @@
     </div>
     <script>
       (function () {
-        // Use ES5 syntax for Kindle support
         var weekdays = [
           "Sunday",
           "Monday",
@@ -157,13 +151,11 @@
           "December",
         ];
         var today = new Date();
-        // Populate header
         document.getElementById("weekday").innerText =
           weekdays[today.getDay()].toUpperCase();
         document.getElementById("big-date").innerText = today.getDate();
         document.getElementById("subdate").innerText =
           months[today.getMonth()] + " " + today.getFullYear();
-        // Build calendar
         var firstDay = new Date(
           today.getFullYear(),
           today.getMonth(),
@@ -192,7 +184,6 @@
           calBody.appendChild(tr);
           if (date > daysInMonth) break;
         }
-        // Build to-do list
         var todoList = document.getElementById("todo-list");
         for (var i = 1; i <= 10; i++) {
           var item = document.createElement("div");
@@ -203,13 +194,8 @@
           var lbl = document.createElement("div");
           lbl.className = "label";
           lbl.innerText = "";
-          var cb = document.createElement("input");
-          cb.type = "checkbox";
-          cb.disabled = true;
-          cb.className = "checkbox";
           item.appendChild(idx);
           item.appendChild(lbl);
-          item.appendChild(cb);
           todoList.appendChild(item);
         }
       })();
