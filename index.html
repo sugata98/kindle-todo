@@ -5,7 +5,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
     />
     <meta http-equiv="refresh" content="3600" />
     <meta
@@ -16,7 +16,6 @@
     <meta http-equiv="Expires" content="0" />
     <title>Smart Kindle Dashboard</title>
     <style>
-      /* Fullscreen fixed container, hide scrolling */
       html,
       body,
       #container {
@@ -28,7 +27,6 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        overscroll-behavior: none;
       }
       *::-webkit-scrollbar {
         display: none !important;
@@ -42,12 +40,12 @@
         background: #fff;
         color: #000;
       }
+
       #container {
         display: flex;
         flex-direction: column;
       }
 
-      /* Calendar pane (40%) */
       .calendar-pane {
         flex: 0 0 40%;
         padding: 10px;
@@ -90,20 +88,23 @@
         border-radius: 4px;
       }
 
-      /* Tasks pane (60%) uses canvas */
       .todo-pane {
         flex: 1 1 60%;
         position: relative;
+        padding: 10px;
+        overflow: hidden;
       }
       .todo-title {
         text-align: center;
         font-size: 2em;
-        margin: 10px 0;
+        margin: 0;
+        padding-bottom: 4px;
       }
+      /* Canvas size/position set in JS */
       #todo-canvas {
-        width: 100%;
-        height: calc(100% - 2.5em);
-        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
       }
     </style>
   </head>
@@ -135,32 +136,27 @@
     </div>
     <script>
       (function () {
-        // disable scrolling
+        // Prevent scroll
         [
           document.documentElement,
           document.body,
           document.getElementById("container"),
-        ].forEach(function (el) {
-          el.style.overflow = "hidden";
+        ].forEach((el) => {
+          if (el) el.style.overflow = "hidden";
         });
 
-        // Load todos from external file
+        // Load todos.json synchronously over HTTP
         var TODOS = [];
         try {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", "todos.json", false);
           xhr.overrideMimeType("application/json");
           xhr.send(null);
-          if (xhr.status === 200) {
-            TODOS = JSON.parse(xhr.responseText);
-          }
+          if (xhr.status === 200) TODOS = JSON.parse(xhr.responseText);
         } catch (e) {
-          console.log("Unable to load todos.json:", e);
+          console.log("todos.json load error", e);
         }
-        // ensure exactly 10 entries
-        for (var i = 0; i < 10; i++) {
-          if (typeof TODOS[i] !== "string") TODOS[i] = "";
-        }
+        while (TODOS.length < 10) TODOS.push("");
 
         // Render calendar (DOM)
         var weekdays = [
@@ -202,8 +198,8 @@
           today.getMonth() + 1,
           0
         ).getDate();
-        var d = 1;
-        var calBody = document.getElementById("calendar-body");
+        var d = 1,
+          calBody = document.getElementById("calendar-body");
         for (var r = 0; r < 6; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
@@ -221,33 +217,37 @@
           if (d > daysInMonth) break;
         }
 
-        // Canvas drawing
+        // Canvas tasks
+        var pane = document.querySelector(".todo-pane");
+        var title = document.querySelector(".todo-title");
         var canvas = document.getElementById("todo-canvas");
         var ctx = canvas.getContext("2d");
-        function drawTasks() {
-          var w = (canvas.width = canvas.clientWidth);
-          var h = (canvas.height = canvas.clientHeight);
-          ctx.clearRect(0, 0, w, h);
-          var lineH = h / 10;
-          ctx.fillStyle = "#000";
-          ctx.font = "bold 1.7em Arial";
+        function resize() {
+          var paneW = pane.clientWidth;
+          var paneH = pane.clientHeight - title.clientHeight - 4; // title padding
+          canvas.width = paneW;
+          canvas.height = paneH;
+          canvas.style.top = title.clientHeight + 4 + "px";
+          // draw
+          ctx.clearRect(0, 0, paneW, paneH);
+          var lineH = paneH / 10;
+          ctx.font = "1.7em Arial";
           ctx.textBaseline = "middle";
+          ctx.fillStyle = "#000";
+          ctx.strokeStyle = "#000";
           for (var i = 0; i < 10; i++) {
             var y = lineH * i + lineH / 2;
-            // index
             ctx.fillText(i + 1 + ")", 10, y);
-            // line
             var startX = 60;
             ctx.beginPath();
-            ctx.moveTo(startX, y + 12);
-            ctx.lineTo(w - 10, y + 12);
+            ctx.moveTo(startX, y + 10);
+            ctx.lineTo(paneW - 10, y + 10);
             ctx.stroke();
-            // text
             if (TODOS[i]) ctx.fillText(TODOS[i], startX, y);
           }
         }
-        window.addEventListener("resize", drawTasks);
-        drawTasks();
+        window.addEventListener("resize", resize);
+        resize();
       })();
     </script>
   </body>
