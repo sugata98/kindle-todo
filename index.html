@@ -7,7 +7,6 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <meta http-equiv="refresh" content="3600" />
     <meta
       http-equiv="Cache-Control"
       content="no-cache, no-store, must-revalidate"
@@ -40,7 +39,7 @@
         flex-direction: column;
       }
 
-      /* Calendar pane (40%) with date + quote as table */
+      /* Calendar pane (40%) */
       .calendar-pane {
         -webkit-flex: 0 0 40%;
         flex: 0 0 40%;
@@ -183,65 +182,64 @@
         for (var i = 0; i < els.length; i++)
           if (els[i]) els[i].style.overflow = "hidden";
 
-        // Load quotes via XHR
-        var QUOTES = [];
-        try {
-          var xhrQ = new XMLHttpRequest();
-          var cacheBuster = "?t=" + Date.now();
-          xhrQ.open(
-            "GET",
-            "https://gist.githubusercontent.com/sugata98/6f73bd3bf214c6cde660604c9056ead0/raw/quotes.json" +
-              cacheBuster,
-            false
-          );
-          xhrQ.send(null);
-          if (xhrQ.status === 200) QUOTES = JSON.parse(xhrQ.responseText);
-        } catch (e) {
-          console.warn("Quotes XHR failed", e);
+        // Cache‐buster helper
+        function loadJSON(url, fallback) {
+          var data = fallback || [];
+          try {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url + "?t=" + Date.now(), false);
+            xhr.send(null);
+            if (xhr.status === 200) data = JSON.parse(xhr.responseText);
+          } catch (e) {}
+          return data;
         }
-        if (!QUOTES.length)
-          QUOTES = [
+
+        // 1) Quotes
+        var QUOTES = loadJSON(
+          "https://gist.githubusercontent.com/sugata98/6f73bd3bf214c6cde660604c9056ead0/raw/quotes.json",
+          [
             {
               text: "Stay positive, work hard, make it happen.",
               author: "Unknown",
             },
-          ];
+          ]
+        );
         var q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
         document.getElementById("quote").innerHTML =
           '<em>"' + q.text + '"</em><strong>– ' + q.author + "</strong>";
 
-        // IST date
-        var now = new Date();
-        var utc = now.getTime() + now.getTimezoneOffset() * 60000;
-        var ist = new Date(utc + 5.5 * 60 * 60000);
-        var months = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
+        // 2) IST date
+        var now = new Date(),
+          utc = now.getTime() + now.getTimezoneOffset() * 60000,
+          ist = new Date(utc + 5.5 * 3600 * 1000),
+          months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
         document.getElementById("big-date").innerText = ist.getDate();
         document.getElementById("subdate").innerText =
           months[ist.getMonth()] + " " + ist.getFullYear();
 
-        // Calendar grid
-        var firstDay = new Date(ist.getFullYear(), ist.getMonth(), 1).getDay();
-        var daysInMonth = new Date(
-          ist.getFullYear(),
-          ist.getMonth() + 1,
-          0
-        ).getDate();
-        var d = 1,
+        // 3) Calendar grid
+        var firstDay = new Date(ist.getFullYear(), ist.getMonth(), 1).getDay(),
+          daysInMonth = new Date(
+            ist.getFullYear(),
+            ist.getMonth() + 1,
+            0
+          ).getDate(),
+          d = 1,
           calBody = document.getElementById("calendar-body");
-        for (var r = 0; r < 6; r++) {
+        for (var r = 0; r < 6 && d <= daysInMonth; r++) {
           var tr = document.createElement("tr");
           for (var c = 0; c < 7; c++) {
             var td = document.createElement("td");
@@ -255,50 +253,52 @@
             tr.appendChild(td);
           }
           calBody.appendChild(tr);
-          if (d > daysInMonth) break;
         }
 
-        // Load todos via XHR
-        var TODOS = [];
-        try {
-          var xhrT = new XMLHttpRequest();
-          var cacheBuster = "?t=" + Date.now();
-          xhrT.open(
-            "GET",
-            "https://gist.githubusercontent.com/sugata98/6f73bd3bf214c6cde660604c9056ead0/raw/todos.json" +
-              cacheBuster,
-            false
-          );
-          xhrT.send(null);
-          if (xhrT.status === 200) TODOS = JSON.parse(xhrT.responseText);
-        } catch (e) {
-          console.warn("Todos XHR failed", e);
-        }
-
-        // Render static todos
+        // 4) Todos
+        var TODOS = loadJSON(
+          "https://gist.githubusercontent.com/sugata98/6f73bd3bf214c6cde660604c9056ead0/raw/todos.json",
+          []
+        );
         var list = document.getElementById("todo-list");
-        for (var i = 0; i < TODOS.length; i++) {
-          var item = document.createElement("div");
+        TODOS.forEach(function (txt, i) {
+          var item = document.createElement("div"),
+            idx = document.createElement("span"),
+            lbl = document.createElement("div"),
+            ci = txt.indexOf(":");
           item.className = "todo-item";
-          var idx = document.createElement("span");
           idx.className = "idx";
           idx.innerText = i + 1 + ")";
-          var lbl = document.createElement("div");
           lbl.className = "label";
-          var txt = TODOS[i] || "";
-          var ci = txt.indexOf(":");
-          if (ci !== -1) {
-            var pr = txt.substring(0, ci + 1);
-            var rt = txt.substring(ci + 1).trim();
+          if (ci > -1) {
             lbl.innerHTML =
-              "<strong>" + pr + "</strong>" + (rt ? " " + rt : "");
+              "<strong>" +
+              txt.slice(0, ci + 1) +
+              "</strong> " +
+              txt.slice(ci + 1).trim();
           } else {
             lbl.innerText = txt;
           }
           item.appendChild(idx);
           item.appendChild(lbl);
           list.appendChild(item);
-        }
+        });
+
+        // 5) Reload at next local midnight IST
+        (function scheduleMidnightReload() {
+          var now = new Date(),
+            utc = now.getTime() + now.getTimezoneOffset() * 60000,
+            istNow = new Date(utc + 5.5 * 3600 * 1000),
+            // next midnight IST:
+            next = new Date(istNow),
+            msUntil;
+          next.setHours(24, 0, 0, 0);
+          msUntil = next.getTime() - istNow.getTime();
+          setTimeout(function () {
+            location.reload();
+            scheduleMidnightReload();
+          }, msUntil);
+        })();
       })();
     </script>
   </body>
