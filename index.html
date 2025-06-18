@@ -270,11 +270,10 @@
         } catch (e) {
           console.warn("Todos XHR failed", e);
         }
-        while (TODOS.length < 10) TODOS.push("");
 
-        // Render & editable todos
+        // Render static todos
         var list = document.getElementById("todo-list");
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < TODOS.length; i++) {
           var item = document.createElement("div");
           item.className = "todo-item";
           var idx = document.createElement("span");
@@ -282,7 +281,6 @@
           idx.innerText = i + 1 + ")";
           var lbl = document.createElement("div");
           lbl.className = "label";
-          lbl.contentEditable = true;
           var txt = TODOS[i] || "";
           var ci = txt.indexOf(":");
           if (ci !== -1) {
@@ -293,10 +291,6 @@
           } else {
             lbl.innerText = txt;
           }
-          lbl.addEventListener("blur", function () {
-            TODOS[i] = lbl.innerText.trim();
-            localStorage.setItem("TODOS", JSON.stringify(TODOS));
-          });
           item.appendChild(idx);
           item.appendChild(lbl);
           list.appendChild(item);
